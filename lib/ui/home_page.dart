@@ -1,8 +1,11 @@
-import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:giphy_share/common/app_colors/app_colors.dart';
+import 'package:giphy_share/services/giphy_service.dart';
+import 'package:giphy_share/ui/view_page.dart';
+import 'package:share/share.dart';
+import 'package:transparent_image/transparent_image.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,19 +16,6 @@ class _HomePageState extends State<HomePage> {
   String _search;
   int _offset = 0;
 
-  Future<Map> _getGifs() async {
-    http.Response response;
-
-    if (_search == null || _search.isEmpty) {
-      response = await http.get(
-          "https://api.giphy.com/v1/gifs/trending?api_key=0KNtl8kPHwtxjMHZEPdIJQ7TNh0ElXo1&limit=20&rating=g");
-    } else {
-      response = await http.get(
-          "https://api.giphy.com/v1/gifs/search?api_key=0KNtl8kPHwtxjMHZEPdIJQ7TNh0ElXo1&q=$_search&limit=19&offset=$_offset&rating=g&lang=en");
-    }
-    return json.decode(response.body);
-  }
-
   @override
   void initState() {
     super.initState();
@@ -35,11 +25,11 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.PrimaryBackgroundColor,
         title: Image.asset("resources/images/logo_giphy.gif"),
         centerTitle: true,
       ),
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.PrimaryBackgroundColor,
       body: Column(
         children: <Widget>[
           Padding(
@@ -47,9 +37,9 @@ class _HomePageState extends State<HomePage> {
             child: TextField(
               decoration: InputDecoration(
                   labelText: "Pesquise Aqui",
-                  labelStyle: TextStyle(color: Colors.white),
+                  labelStyle: TextStyle(color: AppColors.SecondaryBackgroundColor),
                   border: OutlineInputBorder()),
-              style: TextStyle(color: Colors.white, fontSize: 18.0),
+              style: TextStyle(color: AppColors.SecondaryBackgroundColor, fontSize: 18.0),
               textAlign: TextAlign.center,
               onSubmitted: (text){
                 setState(() {
@@ -61,7 +51,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: FutureBuilder(
-                future: _getGifs(),
+                future:  GiphyService.getGifs(_search, _offset),
                 builder: (context,snapshot){
                   switch(snapshot.connectionState){
                     case ConnectionState.waiting:
@@ -71,7 +61,7 @@ class _HomePageState extends State<HomePage> {
                         height: 200.0,
                         alignment: Alignment.center,
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.SecondaryBackgroundColor),
                           strokeWidth: 5.0,
                         ),
                       );
@@ -107,11 +97,18 @@ class _HomePageState extends State<HomePage> {
         itemBuilder: (context, index){
           if(_search == null || index < snapshot.data["data"].length) {
             return GestureDetector(
-                child: Image.network(
-                  snapshot.data["data"][index]["images"]["fixed_height"]["url"],
+              child: FadeInImage.memoryNetwork(
+                  placeholder: kTransparentImage,
+                  image: snapshot.data["data"][index]["images"]["fixed_height"]["url"],
                   height: 300.0,
                   fit: BoxFit.cover,
-                )
+              ),
+              onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ViewPage(snapshot.data["data"][index])));
+              },
+              onLongPress: (){
+                  Share.share(snapshot.data["data"][index]["images"]["fixed_height"]["url"]);
+              },
             );
           }else{
             return Container(
@@ -119,8 +116,8 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Icon(Icons.add, color: Colors.white, size: 70.0,),
-                    Text("Mais Gifs...", style: TextStyle(color: Colors.white, fontSize: 22.0),)
+                    Icon(Icons.add, color: AppColors.SecondaryBackgroundColor, size: 70.0,),
+                    Text("Mais Gifs...", style: TextStyle(color: AppColors.SecondaryBackgroundColor, fontSize: 22.0),)
                   ],
                 ),
                 onTap: (){

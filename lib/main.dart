@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:giphy_share/ui/home_page.dart';
+import 'package:giphy_share/ui/login_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -12,13 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Giphy Share',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        inputDecorationTheme: InputDecorationTheme(
-          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-        )
-      ),
-      home: HomePage(),
+      home: LoginPage(),
     );
   }
 }
